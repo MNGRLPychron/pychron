@@ -17,7 +17,8 @@
 # ============= enthought library imports =======================
 
 # ============= standard library imports ========================
-from pyface.qt import QtCore
+from pyface.gui import GUI
+# from pyface.qt import QtCore
 # ============= local library imports  ==========================
 import math
 
@@ -26,37 +27,38 @@ import math
 """
 
 
-class InvokeEvent(QtCore.QEvent):
-    EVENT_TYPE = QtCore.QEvent.Type(QtCore.QEvent.registerEventType())
+# class InvokeEvent(QtCore.QEvent):
+#     EVENT_TYPE = QtCore.QEvent.Type(QtCore.QEvent.registerEventType())
+#
+#     def __init__(self, fn, *args, **kwargs):
+#         QtCore.QEvent.__init__(self, InvokeEvent.EVENT_TYPE)
+#         self.fn = fn
+#         self.args = args
+#         self.kwargs = kwargs
+#
+#
+# class Invoker(QtCore.QObject):
+#     def event(self, event):
+#         event.fn(*event.args, **event.kwargs)
+#         del event
+#         return True
+#
+#
+# _invoker = Invoker()
+#
+#
+# def invoke_in_main_thread(fn, *args, **kwargs):
+#     #     invoker = Invoker()
+#     QtCore.QCoreApplication.postEvent(_invoker,
+#                                       InvokeEvent(fn, *args, **kwargs))
+#     # QtCore.QCoreApplication.processEvents()
+#     # does this resolve the GUI responsiveness issue during when screen goes to sleep/screen saver
+#     # QtCore.QCoreApplication.sendEvent(_invoker, InvokeEvent(fn, *args, **kwargs))
+#
 
-    def __init__(self, fn, *args, **kwargs):
-        QtCore.QEvent.__init__(self, InvokeEvent.EVENT_TYPE)
-        self.fn = fn
-        self.args = args
-        self.kwargs = kwargs
+def invoke_in_main_thread(*args, **kw):
+    GUI.invoke_later(*args, **kw)
 
-
-class Invoker(QtCore.QObject):
-    def event(self, event):
-        event.fn(*event.args, **event.kwargs)
-        del event
-        return True
-
-
-_invoker = Invoker()
-
-
-def invoke_in_main_thread(fn, *args, **kwargs):
-    #     invoker = Invoker()
-    QtCore.QCoreApplication.postEvent(_invoker,
-                                      InvokeEvent(fn, *args, **kwargs))
-    # QtCore.QCoreApplication.processEvents()
-    # does this resolve the GUI responsiveness issue during when screen goes to sleep/screen saver
-    # QtCore.QCoreApplication.sendEvent(_invoker, InvokeEvent(fn, *args, **kwargs))
-
-
-#def invoke_in_main_thread2(fn, *args, **kw):
-#    _FutureCall(1, fn, *args, **kw)
 
 def convert_color(color, output='rgbF'):
     from pyface.qt.QtGui import QColor

@@ -119,12 +119,23 @@ class TimedFlag(Flag):
     display_time = Property(depends_on='_time_remaining')
     _time_remaining = CInt(0)
 
-    _start_time = None
-    _uperiod = 1000
+    def __init__(self, *args, **kw):
+        super(TimedFlag, self).__init__(*args, **kw)
+        self._start_time = None
+        self._uperiod = 1000
+        self._ping_result = None
+        self._update_timer = None
 
     def clear(self):
         super(TimedFlag, self).clear()
-        self.pt.Stop()
+        self._update_timer.Stop()
+        self._ping_result = 'Complete'
+
+    def ping(self):
+        ret = super(TimedFlag, self).ping()
+        if self._ping_result == 'Complete':
+            ret = 'Complete'
+        return ret
 
     def _get_display_time(self):
         return self._time_remaining
@@ -139,6 +150,7 @@ class TimedFlag(Flag):
         return v
 
     def set(self, value):
+        self._ping_result = None
         set_duration = True
         if isinstance(value, bool):
             set_duration = False
@@ -157,7 +169,8 @@ class TimedFlag(Flag):
                 self._time_remaining = self.duration
 
             self._start_time = time.time()
-            self.pt = PTimer(self._uperiod, self._update_time)
+            self._update_timer = PTimer(self._uperiod, self._update_time)
+
             t = OneShotTimer(self.duration, self.clear)
             t.start()
 
