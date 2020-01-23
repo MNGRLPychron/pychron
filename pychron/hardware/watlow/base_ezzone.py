@@ -15,8 +15,6 @@
 # ===============================================================================
 
 # =============enthought library imports========================
-from __future__ import absolute_import
-from __future__ import print_function
 from traits.api import HasTraits, Enum, Float, Event, Property, Int, Button, Bool, Str, Any, on_trait_change, String
 # =============standard library imports ========================
 # =============local library imports  ==========================
@@ -27,7 +25,7 @@ from pychron.graph.plot_record import PlotRecord
 from pychron.hardware.meter_calibration import MeterCalibration
 from pychron.core.helpers.filetools import parse_file
 from pychron.hardware.watlow import sensor_map, tc_map, itc_map, isensor_map, heat_algorithm_map, truefalse_map, \
-    yesno_map, autotune_aggressive_map, baudmap, ibaudmap
+    yesno_map, autotune_aggressive_map, baudmap, ibaudmap, REGISTER_MAP
 from six.moves import zip
 
 
@@ -37,6 +35,7 @@ class BaseWatlowEZZone(HasTraits):
         this class provides human readable methods for setting the modbus registers
     """
 
+    port = Enum((1,2))
     Ph = Property(Float(enter_set=True,
                         auto_set=False), depends_on='_Ph_')
     _Ph_ = Float(50)
@@ -425,6 +424,8 @@ class BaseWatlowEZZone(HasTraits):
     def load_additional_args(self, config):
         """
         """
+        self.set_attribute(config, 'port', 'Communications', 'port', cast='int')
+
         self.set_attribute(config, 'use_pid_bin', 'Output', 'use_pid_bin', cast='boolean', default=False)
         self.set_attribute(config, 'min_output_scale', 'Output', 'scale_low', cast='float')
         self.set_attribute(config, 'max_output_scale', 'Output', 'scale_high', cast='float')
@@ -471,11 +472,28 @@ class BaseWatlowEZZone(HasTraits):
             r = self.read(ada + 1, response_type='int')
             self.info('register {} pointing to {}'.format(ada + 1, r))
 
-    def read_baudrate(self, port=1):
+    def get_register(self, tag, port=None):
+        if port is None:
+            port = self.port
+
+        if tag in REGISTER_MAP:
+            register = REGISTER_MAP[tag]
+            if isinstance(register, tuple):
+                register = register[port-1]
+        else:
+            raise NotImplementedError
+
+        return register
+
+    def read_baudrate(self, port=None):
         """
             com port 2 is the modbus port
         """
-        register = 2484 if port == 1 else 2504
+        # if port is None:
+        #     port = self.port
+        #
+        # register = 2484 if port == 1 else 2504
+        register = self._get_register('baudrate')
         r = self.read(register, response_type='int')
         if r:
             try:
@@ -483,11 +501,15 @@ class BaseWatlowEZZone(HasTraits):
             except KeyError as e:
                 self.debug('read_baudrate keyerror {}'.format(e))
 
-    def set_baudrate(self, v, port=1):
+    def set_baudrate(self, v, port=None):
         """
             com port 2 is the modbus port
         """
-        register = 2484 if port == 1 else 2504
+        # if port is None:
+        #     port = self.port
+        #
+        # register = 2484 if port == 1 else 2504
+        register = self._get_register('baudrate')
 
         try:
             value = baudmap[v]

@@ -320,6 +320,7 @@ class FusionsLaserManager(LaserManager):
 
     def get_pyrometer_temperature(self):
         pass
+
     # ===============================================================================
     # pyscript interface
     # ===============================================================================
@@ -327,16 +328,13 @@ class FusionsLaserManager(LaserManager):
         """
         """
         stage_controller = self.stage_manager.stage_controller
-        package = 'pychron.managers.motion_controller_managers'
         if 'Aerotech' in stage_controller.__class__.__name__:
-            klass = 'AerotechMotionControllerManager'
-            package += '.aerotech_motion_controller_manager'
+            from pychron.managers.motion_controller_managers.aerotech_motion_controller_manager import \
+                AerotechMotionControllerManager as factory
         else:
-            klass = 'NewportMotionControllerManager'
-            package += '.newport_motion_controller_manager'
+            from pychron.managers.motion_controller_managers.newport_motion_controller_manager import \
+                NewportMotionControllerManager as factory
 
-        module = __import__(package, globals(), locals(), [klass], -1)
-        factory = getattr(module, klass)
         m = factory(motion_controller=stage_controller)
         self.open_view(m)
 

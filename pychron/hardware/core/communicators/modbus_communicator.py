@@ -118,9 +118,11 @@ class ModbusCommunicator(SerialCommunicator):
         """
         """
         # self.debug('asdf {} {}'.format(cmd, resp))
+        self.debug(f'parse response: cmd={cmd}, resp={resp}, type={response_type}')
         if resp is not None and resp is not 'simulation':
 
             args = self._parse_hexstr(resp)
+            self.debug(f'args= {args}')
             if args:
                 # self.debug('args={}'.format(args))
                 if bytes(args[:2]) != bytes.fromhex(cmd[:4]):
@@ -183,6 +185,8 @@ class ModbusCommunicator(SerialCommunicator):
 
                 else:
                     data = args[3:3 + ndata]
+                    v = int.from_bytes(data, 'big')
+                    self.debug(f'data {data}, result {v}')
                     return int.from_bytes(data, 'big')
                     # return int(data, 16)
 
